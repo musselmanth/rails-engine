@@ -53,4 +53,36 @@ RSpec.describe 'Items API' do
 
   end
 
+  context 'get single item' do
+
+    it 'returns an existing item succesfully' do
+      item = create(:item)
+
+      get "/api/v1/items/#{item.id}"
+
+      expect(response).to be_successful
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response_body).to be_a(Hash)
+      expect(response_body).to have_key(:data)
+
+      item = response_body[:data]
+      expect(item).to be_a(Hash)
+      expect(item).to have_key(:id)
+      expect(item[:id]).to eq(item.id.to_s)
+      expect(item).to have_key(:type)
+      expect(item[:type]).to eq("item")
+      expect(item).to have_key(:attributes)
+      item_attr = item[:attributes]
+      expect(item_attr).to have_key(:name)
+      expect(item_attr[:name]).to eq(item.name)
+      expect(item_attr).to have_key(:description)
+      expect(item_attr[:description]).to eq(item.description)
+      expect(item_attr).to have_key(:unit_price)
+      expect(item_attr[:unit_price]).to eq(item.unit_price)
+    end
+
+  end
+
 end
