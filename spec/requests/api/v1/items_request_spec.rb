@@ -56,9 +56,9 @@ RSpec.describe 'Items API' do
   context 'get single item' do
 
     it 'returns an existing item succesfully' do
-      item = create(:item)
+      item_model = create(:item)
 
-      get "/api/v1/items/#{item.id}"
+      get "/api/v1/items/#{item_model.id}"
 
       expect(response).to be_successful
 
@@ -70,17 +70,17 @@ RSpec.describe 'Items API' do
       item = response_body[:data]
       expect(item).to be_a(Hash)
       expect(item).to have_key(:id)
-      expect(item[:id]).to eq(item.id.to_s)
+      expect(item[:id]).to eq(item_model.id.to_s)
       expect(item).to have_key(:type)
       expect(item[:type]).to eq("item")
       expect(item).to have_key(:attributes)
       item_attr = item[:attributes]
       expect(item_attr).to have_key(:name)
-      expect(item_attr[:name]).to eq(item.name)
+      expect(item_attr[:name]).to eq(item_model.name)
       expect(item_attr).to have_key(:description)
-      expect(item_attr[:description]).to eq(item.description)
+      expect(item_attr[:description]).to eq(item_model.description)
       expect(item_attr).to have_key(:unit_price)
-      expect(item_attr[:unit_price]).to eq(item.unit_price)
+      expect(item_attr[:unit_price]).to eq(item_model.unit_price)
     end
 
   end
