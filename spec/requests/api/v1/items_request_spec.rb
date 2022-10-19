@@ -164,6 +164,31 @@ RSpec.describe 'Items API' do
 
       expect(response_body).to eq(expected)
     end
+
+    it 'errors with missing params' do
+      merchant = create(:merchant)
+      item_params = ({
+        name: "item name",
+        merchant_id: merchant.id
+      })
+      headers = {"CONTENT_TYPE" => "application/json"}
+
+      post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
+
+      expect(response).to have_http_status(400)
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expected = {
+        message: "your query could not be completed",
+        errors: [
+            "Description can't be blank",
+            "Unit price can't be blank",
+            "Unit price is not a number"
+        ]
+      }
+
+      expect(response_body).to eq(expected)
+    end
   end
 
 end
