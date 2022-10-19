@@ -164,6 +164,134 @@ RSpec.describe 'Items API' do
 
       expect(response_body).to eq(expected)
     end
+
+    it 'errors with missing params' do
+      merchant = create(:merchant)
+      item_params = ({
+        name: "item name",
+        merchant_id: merchant.id
+      })
+      headers = {"CONTENT_TYPE" => "application/json"}
+
+      post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
+
+      expect(response).to have_http_status(400)
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expected = {
+        message: "your query could not be completed",
+        errors: [
+            "Description can't be blank",
+            "Unit price can't be blank",
+            "Unit price is not a number"
+        ]
+      }
+
+      expect(response_body).to eq(expected)
+    end
+  end
+
+  context 'update an item' do
+    it 'can update an existing item' do
+      item = create(:item)
+      item_params = ({
+        name: "item name",
+        description: "item description",
+        unit_price: 150.00,
+      })
+      headers = {"CONTENT_TYPE" => "application/json"}
+
+      patch "/api/v1/items/#{item.id}", headers: headers, params: JSON.generate(item: item_params)
+
+      expect(response).to be_successful
+      expect(response).to have_http_status(202)
+
+      item.reload
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expected = {
+        data: {
+          id: item.id.to_s,
+          type: "item",
+          attributes: {
+            name: item.name,
+            description: item.description,
+            unit_price: item.unit_price,
+            merchant_id: item.merchant_id
+          }
+        }
+      }
+
+      expect(response_body).to eq(expected)
+      expect(item.name).to eq(item_params[:name])
+      expect(item.description).to eq(item_params[:description])
+      expect(item.unit_price).to eq(item_params[:unit_price])
+    end
+
+    it 'errors if item not found' do
+      item_params = ({
+        name: "item name",
+        description: "item description",
+        unit_price: 150.00,
+      })
+      headers = {"CONTENT_TYPE" => "application/json"}
+
+      patch "/api/v1/items/1", headers: headers, params: JSON.generate(item: item_params)
+
+      expect(response).to have_http_status(404)
+      
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expected = { message: "your query could not be completed", errors: ["Couldn't find Item with 'id'=1"] }
+
+      expect(response_body).to eq(expected)
+    end
+
+    it 'errors if params missing' do
+      item = create(:item)
+      item_params = nil
+      headers = {"CONTENT_TYPE" => "application/json"}
+      patch "/api/v1/items/#{item.id}", headers: headers, params: JSON.generate(item: item_params)
+
+      expect(response).to have_http_status(400)
+      
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expected = { message: "your query could not be completed", errors: ["params are missing or invalid"] }
+
+      expect(response_body).to eq(expected)
+    end
+
+    it 'errors if validations incorrect' do
+      item_1 = create(:item)
+      item_2 = create(:item)
+      item_1_params = ({
+        unit_price: "test"
+      })
+      item_2_params = ({name: ""})
+      headers = {"CONTENT_TYPE" => "application/json"}
+
+      patch "/api/v1/items/#{item_1.id}", headers: headers, params: JSON.generate(item: item_1_params)
+
+      expect(response).to have_http_status(400)
+      
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expected = {
+        message: "your query could not be completed",
+        errors: ["Unit price is not a number"]
+      }
+
+      expect(response_body).to eq(expected)
+
+      patch "/api/v1/items/#{item_2.id}", headers: headers, params: JSON.generate(item: item_2_params)      
+
+      expect(response).to have_http_status(400)
+      
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expected = {
+        message: "your query could not be completed",
+        errors: ["Name can't be blank"]
+      }    
+
+      expect(response_body).to eq(expected)
+    end
   end
 
 end
