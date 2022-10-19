@@ -294,4 +294,27 @@ RSpec.describe 'Items API' do
     end
   end
 
+  context 'destroy item' do
+    it 'can destroy an item' do
+      items = create_list(:item, 2)
+
+      expect(Item.last).to eq(items[1])
+
+      delete "/api/v1/items/#{items[1].id}"
+      
+      expect(response).to have_http_status(204)
+      expect(response.body).to eq("")
+      expect(Item.last).to eq(items[0])
+    end
+
+    it 'errors if item cant be found' do
+      delete "/api/v1/items/1"
+
+      expect(response).to have_http_status(404)
+      
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expected = {message: "your query could not be completed", errors: ["Couldn't find Item with 'id'=1"]}
+    end
+  end
+
 end
