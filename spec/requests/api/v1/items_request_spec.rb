@@ -95,4 +95,75 @@ RSpec.describe 'Items API' do
     end
   end
 
+  context 'create item' do
+    
+    it 'can create a successful item' do
+      merchant = create(:merchant)
+      item_params = ({
+        name: "item name",
+        description: "item description",
+        unit_price: 150.00,
+        merchant_id: merchant.id
+      })
+      headers = {"CONTENT_TYPE" => "application/json"}
+
+      post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
+
+      expect(response).to be_successful
+      expect(response).to have_http_status(201)
+
+      item = Item.last
+      expect(item.name).to eq(item_params[:name])
+      expect(item.description).to eq(item_params[:description])
+      expect(item.unit_price).to eq(item_params[:unit_price])
+      expect(item.merchant_id).to eq(merchant.id)
+    end
+
+    it 'errors with missing params' do
+      item_params = ({})
+      headers = {"CONTENT_TYPE" => "application/json"}
+
+      post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
+      expect(response).to have_http_status(400)
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expected = {
+        message: "your query could not be completed",
+        errors: ["params are missing or invalid"]
+      }
+      
+      expect(response_body).to eq(expected)
+      expect(Item.last).to be(nil)
+    end
+
+    it 'errors with incorrect validation' do
+      merchant = create(:merchant)
+      item_params = ({
+        name: "",
+        description: "",
+        unit_price: "",
+        merchant_id: ""
+      })
+      headers = {"CONTENT_TYPE" => "application/json"}
+
+      post "/api/v1/items", headers: headers, params: JSON.generate(item: item_params)
+
+      expect(response).to have_http_status(400)
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expected = {
+        message: "your query could not be completed",
+        errors: [
+            "Merchant must exist",
+            "Name can't be blank",
+            "Description can't be blank",
+            "Unit price can't be blank",
+            "Unit price is not a number"
+        ]
+      }
+
+      expect(response_body).to eq(expected)
+    end
+  end
+
 end
