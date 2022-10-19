@@ -191,4 +191,41 @@ RSpec.describe 'Items API' do
     end
   end
 
+  context 'update an item' do
+    it 'can update an existing item' do
+      item = create(:item)
+      item_params = ({
+        name: "item name",
+        description: "item description",
+        unit_price: 150.00,
+      })
+      headers = {"CONTENT_TYPE" => "application/json"}
+
+      patch "/api/v1/items/#{item.id}", headers: headers, params: JSON.generate(item: item_params)
+
+      expect(response).to be_successful
+      expect(response).to have_http_status(202)
+
+      item.reload
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expected = {
+        data: {
+          id: item.id.to_s,
+          type: "item",
+          attributes: {
+            name: item.name,
+            description: item.description,
+            unit_price: item.unit_price,
+            merchant_id: item.merchant_id
+          }
+        }
+      }
+
+      expect(response_body).to eq(expected)
+      expect(item.name).to eq(item_params[:name])
+      expect(item.description).to eq(item_params[:description])
+      expect(item.unit_price).to eq(item_params[:unit_price])
+    end
+  end
+
 end
