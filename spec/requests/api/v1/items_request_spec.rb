@@ -83,6 +83,16 @@ RSpec.describe 'Items API' do
       expect(item_attr[:unit_price]).to eq(item_model.unit_price)
     end
 
+    it 'returns an error if an item doesnt exists' do
+      get "/api/v1/items/1"
+
+      expect(response).to have_http_status(404)
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expected = { message: "your query could not be completed", errors: ["Couldn't find Item with 'id'=1"] }
+
+      expect(response_body).to eq(expected)
+    end
   end
 
 end
