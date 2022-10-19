@@ -41,4 +41,41 @@ RSpec.describe "Merchants API" do
       expect(parsed_response[:data].empty?).to be(true)
     end
   end
+
+  context 'get single merchant' do
+
+    it 'returns the merchant data' do
+      merchant_model = create(:merchant)
+      get "/api/v1/merchants/#{merchant_model.id}"
+
+      expect(response).to be_successful
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response_body).to have_key(:data)
+      expect(response_body[:data]).to be_a(Hash)
+
+      merchant = response_body[:data]
+
+      expect(merchant).to have_key(:id)
+      expect(merchant[:id]).to eq(merchant_model.id.to_s)
+      expect(merchant[:type]).to eq("merchant")
+      expect(merchant[:attributes]).to be_a(Hash)
+      merch_attr = merchant[:attributes]
+      expect(merch_attr).to have_key(:name)
+      expect(merch_attr[:name]).to eq(merchant_model.name)
+    end
+
+    it 'returns expected response when merchant not found' do
+      get '/api/v1/merchants/1'
+
+      expect(response).to have_http_status(404)
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expected = { message: "your query could not be completed", errors: ["Couldn't find Merchant with 'id'=1"] }
+
+      expect(response_body).to eq(expected)
+    end
+  end
+
 end
