@@ -4,6 +4,5 @@ FactoryBot.define do
     invoice
     quantity {rand(1..500)}
     unit_price { rand(100..15000) }
-    status { rand(3) }
   end
 end
