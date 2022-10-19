@@ -322,7 +322,7 @@ RSpec.describe 'Items API' do
       merchant_model = create(:merchant)
       item = create(:item, merchant: merchant_model)
       get "/api/v1/items/#{item.id}/merchant"
-
+      
       expect(response).to be_successful
 
       response_body = JSON.parse(response.body, symbolize_names: true)
