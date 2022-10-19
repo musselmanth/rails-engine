@@ -9,7 +9,11 @@ Rails.application.routes.draw do
         end
       end
 
-      resources :items 
+      resources :items do
+        scope module: :items do
+          resource :merchant, only: [:show]
+        end
+      end
       
     end
   end

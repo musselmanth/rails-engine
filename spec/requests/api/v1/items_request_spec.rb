@@ -317,4 +317,38 @@ RSpec.describe 'Items API' do
     end
   end
 
+  context 'item merchant' do
+    it 'returns the items merchant' do
+      merchant_model = create(:merchant)
+      item = create(:item, merchant: merchant_model)
+      get "/api/v1/items/#{item.id}/merchant"
+      
+      expect(response).to be_successful
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response_body).to have_key(:data)
+      expect(response_body[:data]).to be_a(Hash)
+
+      merchant = response_body[:data]
+
+      expect(merchant).to have_key(:id)
+      expect(merchant[:id]).to eq(merchant_model.id.to_s)
+      expect(merchant[:type]).to eq("merchant")
+      expect(merchant[:attributes]).to be_a(Hash)
+      merch_attr = merchant[:attributes]
+      expect(merch_attr).to have_key(:name)
+      expect(merch_attr[:name]).to eq(merchant_model.name)
+    end
+
+    it 'returns error if item not found' do
+      get "/api/v1/items/1/merchant"
+
+      expect(response).to have_http_status(404)
+      
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expected = {message: "your query could not be completed", errors: ["Couldn't find Item with 'id'=1"]}
+    end
+  end
+
 end
