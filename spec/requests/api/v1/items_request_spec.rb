@@ -351,4 +351,34 @@ RSpec.describe 'Items API' do
     end
   end
 
+  context 'find one item' do
+    it 'returns a matching item' do
+      item_model = create(:item, name: "beepboop")
+
+      get "/api/v1/items/find?name=beepboop"
+
+      expect(response).to be_successful
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response_body).to be_a(Hash)
+      expect(response_body).to have_key(:data)
+
+      item = response_body[:data]
+      expect(item).to be_a(Hash)
+      expect(item).to have_key(:id)
+      expect(item[:id]).to eq(item_model.id.to_s)
+      expect(item).to have_key(:type)
+      expect(item[:type]).to eq("item")
+      expect(item).to have_key(:attributes)
+      item_attr = item[:attributes]
+      expect(item_attr).to have_key(:name)
+      expect(item_attr[:name]).to eq(item_model.name)
+      expect(item_attr).to have_key(:description)
+      expect(item_attr[:description]).to eq(item_model.description)
+      expect(item_attr).to have_key(:unit_price)
+      expect(item_attr[:unit_price]).to eq(item_model.unit_price)
+    end
+  end
+
 end
