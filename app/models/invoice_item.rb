@@ -1,7 +1,15 @@
 class InvoiceItem < ApplicationRecord
   belongs_to :invoice
   belongs_to :item
+  
+  around_destroy :destroy_empty_invoice
 
-  before_destroy { @invoice = invoice }
-  after_destroy { @invoice.destroy if @invoice.invoice_items.empty? }
+  private
+
+  def destroy_empty_invoice
+    inv_to_destroy = invoice
+    yield
+    inv_to_destroy.destroy if inv_to_destroy.invoice_items.empty?
+  end
+
 end

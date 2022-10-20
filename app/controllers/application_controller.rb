@@ -12,6 +12,10 @@ class ApplicationController < ActionController::API
     render_json(ErrorSerializer.format_errors(["params are missing or invalid"]), :bad_request)
   end
 
+  def invalid_search_params
+    render_json(ErrorSerializer.format_errors(["invalid search parameters"]), :bad_request)
+  end
+
   def render_json(hash, status = :ok)
     render json: hash, status: status
   end

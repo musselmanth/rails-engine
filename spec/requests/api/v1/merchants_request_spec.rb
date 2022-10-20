@@ -136,4 +136,75 @@ RSpec.describe "Merchants API" do
     end
   end
 
+  context 'find / find_all' do
+    let(:inv_search_error) {{message: "your query could not be completed", errors: ["invalid search parameters"]}}
+
+    it 'errors appropriately' do
+      get "/api/v1/merchants/find?name="
+      expect(response).to have_http_status(400)
+      expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_search_error)
+      get "/api/v1/merchants/find"
+      expect(response).to have_http_status(400)
+      expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_search_error)
+      get "/api/v1/merchants/find_all?name="
+      expect(response).to have_http_status(400)
+      expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_search_error)
+      get "/api/v1/merchants/find_all"
+      expect(response).to have_http_status(400)
+      expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_search_error)
+    end
+
+    it 'returns empty object if no result for find' do
+      merchant = create(:merchant, name: "aaa")
+      get "/api/v1/merchants/find?name=bbb"
+      expect(response).to be_successful
+      expect(response).to have_http_status(200)
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expect(response_body).to eq({data: {}})
+    end
+
+    it 'returns empty array if no result for find_all' do
+      merchant_1 = create(:merchant, name: "aaa")
+      merchant_2 = create(:merchant, name: "bbb")
+
+      get "/api/v1/merchants/find_all?name=ccc"
+
+      expect(response).to be_successful
+      expect(response).to have_http_status(200)
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expect(response_body).to eq({data: []})
+    end
+
+    it 'returns single result for find' do
+      merchant_1 = create(:merchant, name: "ac")
+      merchant_2 = create(:merchant, name: "bbb")
+      merchant_3 = create(:merchant, name: "ab")
+
+      get "/api/v1/merchants/find?name=a"
+      expect(response).to be_successful
+      expect(response).to have_http_status(200)
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expect(response_body).to have_key(:data)
+      expect(response_body[:data]).to be_a(Hash)
+      expect(response_body[:data][:id]).to eq(merchant_3.id.to_s) 
+    end
+
+    it 'returns multiple results for find_all' do
+      merchant_1 = create(:merchant, name: "ac")
+      merchant_2 = create(:merchant, name: "bbb")
+      merchant_3 = create(:merchant, name: "ab")
+
+      get "/api/v1/merchants/find_all?name=a"
+      expect(response).to be_successful
+      expect(response).to have_http_status(200)
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expect(response_body).to have_key(:data)
+      expect(response_body[:data]).to be_an(Array)
+      expect(response_body[:data].length).to eq(2)
+      expect(response_body[:data][0][:id]).to eq(merchant_3.id.to_s) 
+      expect(response_body[:data][1][:id]).to eq(merchant_1.id.to_s) 
+    end
+    
+  end
+
 end

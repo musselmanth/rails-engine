@@ -351,4 +351,300 @@ RSpec.describe 'Items API' do
     end
   end
 
+  context 'find one item' do
+
+    let(:inv_search_error) {
+      {
+      message: "your query could not be completed",
+      errors: ["invalid search parameters"]
+      }
+    }
+
+    it 'returns a matching item' do
+      item_model = create(:item, name: "beepboop")
+
+      get "/api/v1/items/find?name=beepboop"
+
+      expect(response).to be_successful
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response_body).to be_a(Hash)
+      expect(response_body).to have_key(:data)
+
+      item = response_body[:data]
+      expect(item).to be_a(Hash)
+      expect(item).to have_key(:id)
+      expect(item[:id]).to eq(item_model.id.to_s)
+      expect(item).to have_key(:type)
+      expect(item[:type]).to eq("item")
+      expect(item).to have_key(:attributes)
+      item_attr = item[:attributes]
+      expect(item_attr).to have_key(:name)
+      expect(item_attr[:name]).to eq(item_model.name)
+      expect(item_attr).to have_key(:description)
+      expect(item_attr[:description]).to eq(item_model.description)
+      expect(item_attr).to have_key(:unit_price)
+      expect(item_attr[:unit_price]).to eq(item_model.unit_price)
+    end
+
+    it 'returns empty data objec if no results' do
+      item_1 = create(:item, unit_price: 3, name: "a")
+      item_2 = create(:item, unit_price: 8, name: "b")
+
+      get "/api/v1/items/find?name=c"
+
+      expect(response).to be_successful
+      expect(response).to have_http_status(200)
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expect(response_body).to eq({ data: {} })
+    end
+
+    it 'returns errors if string is blank' do
+      item_model = create(:item, name: "beepboop")
+
+      get "/api/v1/items/find?name="
+
+      expect(response).to have_http_status(400)
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      
+      expect(response_body).to eq(inv_search_error)
+    end
+
+    it 'returns errors if min_price or max_price included in params' do
+      item_model = create(:item, name: "beepboop")
+
+      get "/api/v1/items/find?name=beepboop&min_price=55.5"
+
+      expect(response).to have_http_status(400)
+
+      get "/api/v1/items/find?name=beepboop&max_price=55.5"
+
+      expect(response).to have_http_status(400)
+
+      get "/api/v1/items/find?name=beepboop&min_price=8&max_price=55.5"
+
+      expect(response).to have_http_status(400)
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response_body).to eq(inv_search_error)
+    end
+
+    it 'returns error if no params' do
+      get "/api/v1/items/find"
+
+      expect(response).to have_http_status(400)
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response_body).to eq(inv_search_error)
+    end
+
+    it 'returns error if min_price or max_price less than 0' do
+      get("/api/v1/items/find?min_price=-10")
+
+      expect(response).to have_http_status(400)
+
+      get("/api/v1/items/find?max_price=-10")
+
+      expect(response).to have_http_status(400)
+
+      get("/api/v1/items/find?min_price=5&max_price=-8")
+
+      expect(response).to have_http_status(400)
+
+      get("/api/v1/items/find?min_price=-1&max_price=10")
+
+      expect(response).to have_http_status(400)
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response_body).to eq(inv_search_error)
+    end
+
+    it 'returns error if min price greater than max price' do
+      get("/api/v1/items/find?min_price=10&max_price=5")
+
+      expect(response).to have_http_status(400)
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response_body).to eq(inv_search_error)
+    end
+
+    it 'returns first alphabetical above min price' do
+      item_1 = create(:item, unit_price: 3, name: "a")
+      item_2 = create(:item, unit_price: 8, name: "b")
+      item_3 = create(:item, unit_price: 10, name: "d")
+      item_4 = create(:item, unit_price: 11, name: "e")
+      item_5 = create(:item, unit_price: 15, name: "c")
+      item_6 = create(:item, unit_price: 18, name: "f")
+
+      get("/api/v1/items/find?min_price=10")
+
+      expect(response).to be_successful
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+
+      expected = {
+        data: {
+          id: item_5.id.to_s,
+          type: "item",
+          attributes: {
+            name: "c",
+            unit_price: item_5.unit_price,
+            description: item_5.description,
+            merchant_id: item_5.merchant_id
+          }
+        }
+      }
+
+      expect(response_body).to eq(expected)
+    end
+  end
+
+  context 'find_all items' do
+
+    let(:inv_search_error) {{message: "your query could not be completed", errors: ["invalid search parameters"]}}
+
+    it 'errors for same reasons as find' do
+      get "/api/v1/items/find_all?name="
+      expect(response).to have_http_status(400)
+      expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_search_error)
+      get "/api/v1/items/find_all?name=beepboop&min_price=55.5"
+      expect(response).to have_http_status(400)
+      expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_search_error)
+      get "/api/v1/items/find_all?name=beepboop&max_price=55.5"
+      expect(response).to have_http_status(400)
+      expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_search_error)
+      get "/api/v1/items/find_all?name=beepboop&min_price=8&max_price=55.5"
+      expect(response).to have_http_status(400)
+      expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_search_error)
+      get "/api/v1/items/find_all"
+      expect(response).to have_http_status(400)
+      expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_search_error)
+      get "/api/v1/items/find_all?min_price=-10"
+      expect(response).to have_http_status(400)
+      expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_search_error)
+      get "/api/v1/items/find_all?max_price=-10"
+      expect(response).to have_http_status(400)
+      expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_search_error)
+      get "/api/v1/items/find_all?min_price=5&max_price=-8"
+      expect(response).to have_http_status(400)
+      expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_search_error)
+      get "/api/v1/items/find_all?min_price=-1&max_price=10"
+      expect(response).to have_http_status(400)
+      expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_search_error)
+      get "/api/v1/items/find_all?min_price=10&max_price=5"
+      expect(response).to have_http_status(400)
+      expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_search_error)
+    end
+
+    it 'returns empty data array if no results' do
+      item_1 = create(:item, unit_price: 3, name: "a")
+      item_2 = create(:item, unit_price: 8, name: "b")
+
+      get "/api/v1/items/find_all?name=c"
+
+      expect(response).to be_successful
+      expect(response).to have_http_status(200)
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expect(response_body).to eq({ data: [] })
+    end
+
+    it 'returns all items greater than price in alph order' do
+      item_1 = create(:item, unit_price: 3, name: "a")
+      item_2 = create(:item, unit_price: 8, name: "b")
+      item_3 = create(:item, unit_price: 10, name: "d")
+      item_4 = create(:item, unit_price: 11, name: "e")
+      item_5 = create(:item, unit_price: 15, name: "c")
+      item_6 = create(:item, unit_price: 18, name: "f")
+
+      get("/api/v1/items/find_all?min_price=10")
+
+      expect(response).to be_successful
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response_body).to have_key(:data)
+      expect(response_body[:data]).to be_an(Array)
+      expect(response_body[:data].length).to eq(4)
+      expect(response_body[:data][0][:attributes][:name]).to eq("c")
+      expect(response_body[:data][1][:attributes][:name]).to eq("d")
+      expect(response_body[:data][2][:attributes][:name]).to eq("e")
+      expect(response_body[:data][3][:attributes][:name]).to eq("f")
+    end
+
+    it 'returns all items less than price in alph order' do
+      item_1 = create(:item, unit_price: 15, name: "a")
+      item_2 = create(:item, unit_price: 16, name: "b")
+      item_3 = create(:item, unit_price: 10, name: "d")
+      item_4 = create(:item, unit_price: 4, name: "e")
+      item_5 = create(:item, unit_price: 1, name: "c")
+      item_6 = create(:item, unit_price: 2, name: "f")
+
+      get("/api/v1/items/find_all?max_price=10")
+
+      expect(response).to be_successful
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response_body).to have_key(:data)
+      expect(response_body[:data]).to be_an(Array)
+      expect(response_body[:data].length).to eq(4)
+      expect(response_body[:data][0][:attributes][:name]).to eq("c")
+      expect(response_body[:data][1][:attributes][:name]).to eq("d")
+      expect(response_body[:data][2][:attributes][:name]).to eq("e")
+      expect(response_body[:data][3][:attributes][:name]).to eq("f")
+    end
+
+    it 'returns all items between prices in alph order' do
+      item_1 = create(:item, unit_price: 3, name: "a")
+      item_2 = create(:item, unit_price: 9, name: "b")
+      item_3 = create(:item, unit_price: 4, name: "d")
+      item_4 = create(:item, unit_price: 5, name: "e")
+      item_5 = create(:item, unit_price: 6, name: "c")
+      item_6 = create(:item, unit_price: 8, name: "f")
+
+      get("/api/v1/items/find_all?min_price=4&max_price=8")
+
+      expect(response).to be_successful
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response_body).to have_key(:data)
+      expect(response_body[:data]).to be_an(Array)
+      expect(response_body[:data].length).to eq(4)
+      expect(response_body[:data][0][:attributes][:name]).to eq("c")
+      expect(response_body[:data][1][:attributes][:name]).to eq("d")
+      expect(response_body[:data][2][:attributes][:name]).to eq("e")
+      expect(response_body[:data][3][:attributes][:name]).to eq("f")
+    end
+
+    it 'returns all items with matching name in alphabetical order' do
+      item_1 = create(:item, name: "jIob")
+      item_2 = create(:item, name: "ajiO")
+      item_3 = create(:item, name: "bJI9")
+      item_4 = create(:item, name: "cJisd")
+      item_5 = create(:item, name: "fjiok")
+      item_6 = create(:item, name: "djiol")
+
+      get("/api/v1/items/find_all?name=jio")
+
+      expect(response).to be_successful
+
+      response_body = JSON.parse(response.body, symbolize_names: true)
+
+      expect(response_body).to have_key(:data)
+      expect(response_body[:data]).to be_an(Array)
+      expect(response_body[:data].length).to eq(4)
+      expect(response_body[:data][0][:attributes][:name]).to eq("ajiO")
+      expect(response_body[:data][1][:attributes][:name]).to eq("djiol")
+      expect(response_body[:data][2][:attributes][:name]).to eq("fjiok")
+      expect(response_body[:data][3][:attributes][:name]).to eq("jIob")
+    end
+  end
+
 end

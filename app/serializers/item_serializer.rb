@@ -1,5 +1,6 @@
 class ItemSerializer
   include JSONAPI::Serializer
+  include EmptyObjectSerializer
 
   attributes :name,
              :description,
