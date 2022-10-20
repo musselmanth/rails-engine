@@ -388,6 +388,18 @@ RSpec.describe 'Items API' do
       expect(item_attr[:unit_price]).to eq(item_model.unit_price)
     end
 
+    it 'returns empty data objec if no results' do
+      item_1 = create(:item, unit_price: 3, name: "a")
+      item_2 = create(:item, unit_price: 8, name: "b")
+
+      get "/api/v1/items/find?name=c"
+
+      expect(response).to be_successful
+      expect(response).to have_http_status(200)
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expect(response_body).to eq({ data: {} })
+    end
+
     it 'returns errors if string is blank' do
       item_model = create(:item, name: "beepboop")
 
@@ -528,6 +540,18 @@ RSpec.describe 'Items API' do
       get "/api/v1/items/find_all?min_price=10&max_price=5"
       expect(response).to have_http_status(400)
       expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_search_error)
+    end
+
+    it 'returns empty data array if no results' do
+      item_1 = create(:item, unit_price: 3, name: "a")
+      item_2 = create(:item, unit_price: 8, name: "b")
+
+      get "/api/v1/items/find_all?name=c"
+
+      expect(response).to be_successful
+      expect(response).to have_http_status(200)
+      response_body = JSON.parse(response.body, symbolize_names: true)
+      expect(response_body).to eq({ data: [] })
     end
 
     it 'returns all items greater than price in alph order' do
