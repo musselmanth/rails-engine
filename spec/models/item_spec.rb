@@ -21,4 +21,65 @@ RSpec.describe Item do
     item_1.destroy!
     expect(Invoice.all).to eq([invoice_1])
   end
+
+  it 'returns a name search result' do
+    item_1 = create(:item, name: "alice")
+    item_2 = create(:item, name: "boop")
+    item_3 = create(:item, name: "chad")
+
+    result = Item.name_search("boop", 1)
+
+    expect(result).to eq(item_2)
+  end
+
+  it 'returns a name with a partial search result' do
+    item_1 = create(:item, name: "alice")
+    item_2 = create(:item, name: "boopbeep")
+    item_3 = create(:item, name: "chad")
+
+    result = Item.name_search("ch", 1)
+
+    expect(result).to eq(item_3)
+  end
+
+  it 'returns the fist alphabetically with multiple results' do
+    item_1 = create(:item, name: "bbc")
+    item_2 = create(:item, name: "abc")
+    item_3 = create(:item, name: "cbc")
+
+    result = Item.name_search("bc", 1)
+
+    expect(result).to eq(item_2)
+  end
+
+  it 'can return multiple / all results in alphabetical order' do
+    item_1 = create(:item, name: "bac")
+    item_2 = create(:item, name: "cbc")
+    item_3 = create(:item, name: "abc")
+
+    result = Item.name_search("bc")
+
+    expect(result).to eq([item_3, item_2])
+  end
+
+  it 'alphabetical order case 2' do
+    item_1 = create(:item, name: "bac")
+    item_2 = create(:item, name: "abc")
+    item_3 = create(:item, name: "cbc")
+
+    result = Item.name_search("bc")
+
+    expect(result).to eq([item_2, item_3])
+  end
+
+  it 'name search case insensitive' do
+    item_1 = create(:item, name: "Turing")
+    item_2 = create(:item, name: "Ring World")
+    item_3 = create(:item, name: "no")
+
+    result = Item.name_search("ring")
+    
+    expect(result).to eq([item_2, item_1])
+  end
+
 end
