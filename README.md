@@ -29,6 +29,11 @@ See below for availalble endpoints.
 
     #setup database
     rails db:{create:migrate:seed}
+    
+    #start rails server
+    rails server
+    
+    #retrive available endpoints using http://localhost:3000/api/v1
 
 ## Availble Endpoints
 
