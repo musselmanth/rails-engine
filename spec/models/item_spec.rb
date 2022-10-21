@@ -17,7 +17,6 @@ RSpec.describe Item do
     item_2 = create(:item)
     invoice_1.items << [item_1, item_2]
     invoice_2.items << item_1
-
     item_1.destroy!
     expect(Invoice.all).to eq([invoice_1])
   end
