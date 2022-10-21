@@ -3,7 +3,9 @@
 ## About
 
 This project is Ruby on Rails API that exposes mock ecommerce data from a PostgeSQL database.
+
 The API is deployed on heroku with the base url https://rails-engine-tm.herokuapp.com/api/v1
+
 See below for availalble endpoints.
 
 ## Learning Goals
@@ -149,3 +151,5 @@ Searches for either one or all merchants whose name match the provided search qu
 ---
 
 ## Database Schema
+
+![DB Schema](https://user-images.githubusercontent.com/25420663/192656265-04a3fdbc-0111-4a23-83f1-a5e5af5b7e74.png "DB Schema")
