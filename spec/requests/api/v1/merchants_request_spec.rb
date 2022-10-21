@@ -40,6 +40,60 @@ RSpec.describe "Merchants API" do
       expect(parsed_response[:data]).to be_an(Array)
       expect(parsed_response[:data].empty?).to be(true)
     end
+
+    context 'pagination' do
+      before :each do
+        @merchants = create_list(:merchant, 26)
+      end
+
+      let(:inv_params_error) {{message: "your query could not be completed", errors: ["params are missing or invalid"]}}
+
+      it 'returns 20 by default' do
+        get "/api/v1/merchants"
+        
+        results = JSON.parse(response.body, symbolize_names: true)[:data]
+        expected = JSON.parse(MerchantSerializer.new(@merchants[0..19]).to_json, symbolize_names: true)[:data]
+        expect(results.length).to eq(20)
+        expect(results).to eq(expected)
+      end
+
+      it 'returns remaining 6 on page 2' do
+        get "/api/v1/merchants?page=2"
+        results = JSON.parse(response.body, symbolize_names: true)[:data]
+        expected = JSON.parse(MerchantSerializer.new(@merchants[20..25]).to_json, symbolize_names: true)[:data]
+        expect(results.length).to eq(6)
+        expect(results).to eq(expected)
+      end
+
+      it 'returns number of results requested' do
+        get "/api/v1/merchants?per_page=5"
+        results = JSON.parse(response.body, symbolize_names: true)[:data]
+        expect(results.length).to eq(5)
+
+        get "/api/v1/merchants?per_page=5&page=6"
+        results = JSON.parse(response.body, symbolize_names: true)[:data]
+        expect(results.length).to eq(1)
+      end
+
+      it 'errors when params are negative' do
+        get "/api/v1/merchants?per_page=-1"
+        expect(response).to have_http_status(400)
+        expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_params_error)
+        get "/api/v1/merchants?per_page=-8&page=-9"
+        expect(response).to have_http_status(400)
+        expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_params_error)
+        get "/api/v1/merchants?per_page=8&page=-1"
+        expect(response).to have_http_status(400)
+        expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_params_error)
+        get "/api/v1/merchants?page=-5"
+        expect(response).to have_http_status(400)
+        expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_params_error)
+        get "/api/v1/merchants?per_page=-8&page=5"
+        expect(response).to have_http_status(400)
+        expect(JSON.parse(response.body, symbolize_names: true)).to eq(inv_params_error)
+      end
+
+    end
   end
 
   context 'get single merchant' do
