@@ -4,13 +4,13 @@ Rails.application.routes.draw do
     namespace :v1 do
 
       namespace :items do
-        get "/find", to: "search#show", as: :find
-        get "/find_all", to: "search#index", as: :find_all
+        get "/find", to: "search#show", as: :find, defaults: {num_results: 1}
+        get "/find_all", to: "search#show", as: :find_all, defaults: {num_results: nil}
       end
 
       namespace :merchants do
-        get "/find", to: "search#show", as: :find
-        get "/find_all", to: "search#index", as: :find_all
+        get "/find", to: "search#show", as: :find, defaults: {num_results: 1}
+        get "/find_all", to: "search#show", as: :find_all, defaults: {num_results: nil}
       end
 
       resources :merchants, only: [:index, :show] do
