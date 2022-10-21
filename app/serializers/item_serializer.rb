@@ -7,5 +7,4 @@ class ItemSerializer
              :unit_price,
              :merchant_id
 
-  
 end

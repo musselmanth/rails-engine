@@ -1,6 +1,8 @@
 class Item < ApplicationRecord
   include Pageable
   
+  around_destroy :cleanup_invoices
+
   belongs_to :merchant
   has_many :invoice_items, dependent: :destroy
   has_many :invoices, through: :invoice_items
@@ -18,5 +20,13 @@ class Item < ApplicationRecord
     max_price ||= Float::INFINITY
     result = where("unit_price >= ? AND unit_price <= ?", min_price, max_price).limit(limit).order(:name)
     limit == 1 ? result.first : result
+  end
+
+  private
+
+  def cleanup_invoices
+    invoice_ids = invoices.pluck(:id)
+    yield
+    Invoice.delete_empty_invoices_in(invoice_ids)
   end
 end
