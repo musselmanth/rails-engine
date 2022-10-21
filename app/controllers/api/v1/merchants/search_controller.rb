@@ -2,16 +2,7 @@ class Api::V1::Merchants::SearchController < ApplicationController
 
   def show
     if valid_search?
-      result = Merchant.name_search(params[:name], 1)
-      render_json(MerchantSerializer.new(result))
-    else
-      invalid_search_params
-    end
-  end
-
-  def index
-    if valid_search?
-      result = Merchant.name_search(params[:name])
+      result = Merchant.name_search(params[:name], params[:num_results])
       render_json(MerchantSerializer.new(result))
     else
       invalid_search_params
