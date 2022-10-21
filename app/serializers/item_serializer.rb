@@ -6,4 +6,6 @@ class ItemSerializer
              :description,
              :unit_price,
              :merchant_id
+
+  
 end

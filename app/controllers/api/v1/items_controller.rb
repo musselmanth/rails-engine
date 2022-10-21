@@ -2,7 +2,8 @@ class Api::V1::ItemsController < ApplicationController
   before_action :get_item, only: [:show, :update, :destroy]
 
   def index
-    render_json(ItemSerializer.new(Item.all))
+    items = Item.get_page(params[:per_page], params[:page])
+    render_json(ItemSerializer.new(items))
   end
 
   def show

@@ -1,6 +1,9 @@
 class ApplicationController < ActionController::API
   rescue_from ActiveRecord::RecordNotFound, with: :not_found
   rescue_from ActionController::ParameterMissing, with: :invalid_params
+  rescue_from PG::InvalidRowCountInResultOffsetClause, with: :invalid_params
+  rescue_from PG::InvalidRowCountInLimitClause, with: :invalid_params
+  rescue_from PG::InFailedSqlTransaction, with: :invalid_params
 
   private
 
