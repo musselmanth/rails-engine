@@ -2,7 +2,7 @@
 
 ## About
 
-This project is Ruby on Rails API that exposes mock ecommerce data from a PostgeSQL database.
+This project is Ruby on Rails API that exposes mock ecommerce data from a PostgeSQL database. This is my first attempt at building an API. It was a solo project with a 5-day timeline.
 
 The API is deployed on heroku with the base url https://rails-engine-tm.herokuapp.com/api/v1
 
